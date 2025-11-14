@@ -1,5 +1,5 @@
 {
-  "name": "cmsassstarter",
+  "name": "{{ APP_SLUG }}",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^6.0.0",
+    "@sveltejs/adapter-node": "^5.4.0",
     "@sveltejs/kit": "^2.21.1",
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "@tailwindcss/postcss": "^4.0.9",
@@ -36,6 +37,7 @@
     "postcss": "^8.4.31",
     "prettier": "^3.1.0",
     "prettier-plugin-svelte": "^3.2.6",
+    "supabase": "^2.54.11",
     "super-sitemap": "^0.15.1",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",

@@ -1,5 +1,5 @@
 // src/hooks.server.ts
-import { PRIVATE_SUPABASE_SERVICE_ROLE } from "$env/static/private"
+import { env } from "$env/dynamic/private"
 import {
   PUBLIC_SUPABASE_ANON_KEY,
   PUBLIC_SUPABASE_URL,
@@ -23,18 +23,26 @@ export const supabase: Handle = async ({ event, resolve }) => {
          */
         setAll: (cookiesToSet) => {
           cookiesToSet.forEach(({ name, value, options }) => {
-            event.cookies.set(name, value, { ...options, path: "/" })
+            event.cookies.set(name, value, {
+              ...options,
+              path: "/",
+              secure: event.url.protocol === "https:",
+              sameSite: "lax",
+            })
           })
         },
       },
     },
   )
 
-  event.locals.supabaseServiceRole = createClient(
-    PUBLIC_SUPABASE_URL,
-    PRIVATE_SUPABASE_SERVICE_ROLE,
-    { auth: { persistSession: false } },
-  )
+  // Service role client - only available at runtime (not during build/prerender)
+  if (env.PRIVATE_SUPABASE_SERVICE_ROLE) {
+    event.locals.supabaseServiceRole = createClient(
+      PUBLIC_SUPABASE_URL,
+      env.PRIVATE_SUPABASE_SERVICE_ROLE,
+      { auth: { persistSession: false } },
+    )
+  }
 
   // https://github.com/supabase/auth-js/issues/888#issuecomment-2189298518
   if ("suppressGetSessionWarning" in event.locals.supabase.auth) {
