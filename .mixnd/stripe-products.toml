@@ -1,0 +1,14 @@
+# Stripe Products Configuration
+# CLI will auto-create these products when app is created
+
+[[product]]
+name = "{{ APP_NAME }} Pro"
+description = "Professional plan with advanced features"
+monthly_price = 1000  # $10.00 USD in cents
+currency = "usd"
+
+[[product]]
+name = "{{ APP_NAME }} Enterprise"
+description = "Enterprise plan with premium support"
+monthly_price = 2500  # $25.00 USD in cents
+currency = "usd"

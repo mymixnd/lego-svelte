@@ -1,0 +1,139 @@
+# lego-svelte Template Configuration
+# This file tells mixnd-cli what this template needs and how to set it up
+
+[template]
+name = "lego-svelte"
+version = "2.0.0"
+description = "Production-ready SaaS starter with SvelteKit, Supabase, Stripe, and DaisyUI"
+author = "mixnd"
+repository = "https://github.com/mymixnd/lego-svelte"
+min_cli_version = "1.0.0"
+
+# Only 2 environments (no staging)
+[environments]
+configs = ["dev", "prd"]
+
+# Platform-level secrets (shared across all apps, stored in mixnd-platform)
+[platform_secrets]
+required = [
+    "STRIPE_API_KEY",
+    "RESEND_API_KEY",
+    "COOLIFY_URL",
+    "COOLIFY_TOKEN",
+    "GITHUB_TOKEN",
+]
+
+# Integrations that CLI should set up automatically
+[integrations.supabase]
+enabled = true
+migrations = true  # Auto-run: supabase link && supabase db push
+auth_providers = ["email"]  # Email auth enabled by default
+
+# Auth callback URLs to configure via Supabase API
+[integrations.supabase.auth]
+callback_urls = [
+    "https://{{ APP_DOMAIN }}/auth/callback",
+    "https://{{ APP_DOMAIN }}/auth/callback?*",
+    "http://localhost:5173/auth/callback",
+    "http://localhost:5173/auth/callback?*",
+]
+
+[integrations.stripe]
+enabled = true
+products = true    # Auto-create products from stripe-products.toml
+webhooks = true    # Auto-create webhook endpoint
+
+# Stripe webhook configuration
+[integrations.stripe.webhook]
+url = "https://{{ APP_DOMAIN }}/webhooks/stripe"
+events = [
+    "customer.subscription.created",
+    "customer.subscription.updated",
+    "customer.subscription.deleted",
+    "invoice.payment_succeeded",
+    "invoice.payment_failed",
+]
+
+[integrations.resend]
+enabled = true
+# Domain verification must be done manually (DNS records)
+# But API key is copied from platform secrets
+
+[integrations.github_actions]
+enabled = true  # Template has .github/workflows/ci.yml
+
+# GitHub secrets to set for CI/CD
+[integrations.github_actions.secrets]
+COOLIFY_WEBHOOK = { source = "coolify_webhook_url" }  # Generated during setup
+COOLIFY_TOKEN = { source = "platform.COOLIFY_TOKEN" }  # From platform secrets
+
+# Optional integrations (CLI will prompt)
+[integrations.google_oauth]
+enabled = false  # User must enable explicitly
+optional = true
+prompt = "Enable Google OAuth login?"
+# If enabled, CLI shows setup guide from .mixnd/hooks/setup-guide.md
+
+# Coolify app configuration
+[coolify]
+build_pack = "dockerfile"
+instant_deploy = false  # Use GitHub Actions instead
+ports_exposes = "3000"
+domains = ["https://{{ APP_DOMAIN }}"]  # Auto-configure with Let's Encrypt
+
+# Environment variables to set in Coolify
+# buildtime = available during Docker build
+# runtime = available at container runtime only
+[coolify.env_vars]
+PUBLIC_SUPABASE_URL = { buildtime = true }
+PUBLIC_SUPABASE_ANON_KEY = { buildtime = true }
+PRIVATE_SUPABASE_SERVICE_ROLE = { buildtime = false }
+PRIVATE_STRIPE_API_KEY = { buildtime = false, source = "platform.STRIPE_API_KEY" }
+PRIVATE_STRIPE_WEBHOOK_SECRET = { buildtime = false, source = "generated" }
+PRIVATE_RESEND_API_KEY = { buildtime = false, source = "platform.RESEND_API_KEY" }
+APP_NAME = { buildtime = false, source = "app_name" }
+
+# Doppler project configuration
+[doppler]
+configs = ["dev", "prd"]  # Create both configs
+
+# Secrets to store in Doppler (for each config)
+[doppler.secrets]
+PUBLIC_SUPABASE_URL = { source = "supabase_url" }
+PUBLIC_SUPABASE_ANON_KEY = { source = "supabase_anon_key" }
+PRIVATE_SUPABASE_SERVICE_ROLE = { source = "supabase_service_key" }
+PRIVATE_STRIPE_API_KEY = { source = "platform.STRIPE_API_KEY" }
+PRIVATE_STRIPE_WEBHOOK_SECRET = { source = "generated" }
+PRIVATE_RESEND_API_KEY = { source = "platform.RESEND_API_KEY" }
+APP_NAME = { source = "app_name" }
+APP_DOMAIN = { source = "app_domain" }
+
+# Post-creation hooks
+[hooks]
+post_create = ".mixnd/hooks/post-create.sh"  # Run after app created
+
+# Files/directories to ignore during template processing
+[processing.ignore]
+patterns = [
+    ".git/**",
+    "node_modules/**",
+    ".svelte-kit/**",
+    "build/**",
+    ".env",
+    ".env.*",
+    "!.env.test",
+    "pnpm-lock.yaml",
+    ".mixnd/**",
+    "CLAUDE.md",  # Don't process CLAUDE.md (already has {{ }})
+]
+
+# Features included in this template
+[features]
+auth = ["email", "google_oauth"]  # google_oauth is optional
+billing = ["stripe"]
+email = ["resend", "supabase_smtp"]
+database = ["supabase", "migrations"]
+testing = ["vitest", "playwright"]
+ci_cd = ["github_actions"]
+design_system = ["daisyui", "tailwindcss"]
+blog = true
